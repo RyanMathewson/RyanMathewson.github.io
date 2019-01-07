@@ -1,0 +1,190 @@
+<html>
+
+<head>
+
+</head>
+
+<body>
+
+    <div id='login'>
+        Username:
+        <input type="text" id="username" />
+        <br> Password:
+        <input type="password" id="password" />
+        <input type="button" value="Login" onclick="javascript:Login();" />
+        <div id='login_message' style='color: red;'></div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+
+    <script>
+
+
+        $(function () {
+            attemptAutoLogin();
+        });
+
+        function attemptAutoLogin() {
+            if (!GetAuthToken()) {
+                return;
+            } else {
+                $('#login').hide();
+                PopulateUI();
+            }
+        }
+
+
+        function LoginSuccess(data) {
+            console.log('Login Success!');
+            $('#login').hide();
+            localStorage.setItem('authToken', data.user.authToken);
+            PopulateUI();
+        }
+
+        function LoginError(jqXHR, textStatus, errorThrown) {
+            console.error('Login Failed' + jqXHR);
+            $('#login_message').text('Login Failed: ' + jqXHR.responseText);
+        }
+
+        function Login() {
+            console.log('Attempting Login');
+
+            $.ajax({
+                url: 'https://plex.tv/users/sign_in.json',
+                type: 'post',
+                data: {
+                    'user[login]': $('#username').val(),
+                    'user[password]': $('#password').val()
+                },
+                headers: {
+                    'X-Plex-Client-Identifier': 'TestClient',
+                    'X-Plex-Product': 'FlashDashboard',
+                    'X-Plex-Version': '0.0'
+                },
+                dataType: 'json',
+                success: LoginSuccess,
+                error: LoginError
+            });
+        }
+
+
+
+
+        function PopulateUI() {
+            console.log('Populating UI');
+
+            $.ajax({
+                url: 'https://plex.tv/api/resources',
+                type: 'get',
+                headers: {
+                    'includeHttps': 1,
+                    'includeRelay': 1,
+                    'X-Plex-Token': GetAuthToken()
+                },
+                dataType: 'xml',
+                success: ProcessResources,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('Get Resources Failed: ' + jqXHR);
+                }
+            });
+        }
+
+        function ProcessResources(data) {
+            console.log('Processing Resources');
+            //console.log('Resources: ', data);
+            var devices = $(data).find("Device");
+            devices.each(ProcessDevice);
+        }
+
+
+        function ProcessDevice(data) {
+            //console.log("Device: ", this);
+            var name = $(this).attr('name');
+            console.log('Processing Device: ' + name);
+
+            var provides = $(this).attr('provides');
+            if (!provides.includes('server')) {
+                console.log('Device \'' + name + '\' is not a server and will be skipped.')
+                return true;
+            }
+
+            var publicAddress = $(this).attr('publicAddress');
+            var accessToken = $(this).attr('accessToken');
+            var clientIdentifier = $(this).attr('clientIdentifier');
+
+            console.log(name, accessToken);
+
+            var connections = $(this).find("Connection");
+            var remoteConnection = null;
+            connections.each(function () {
+                if ($(this).attr('local') == '0') {
+                    remoteConnection = $(this);
+                    return false;
+                }
+            });
+
+            if (remoteConnection == null) {
+                console.error('No remote connection found!');
+                return;
+            }
+
+            //console.log('Remote Connection: ', remoteConnection);
+            var publicURI = remoteConnection.attr('uri');
+
+            GetOnDeck(publicURI, accessToken);
+        }
+
+        function GetOnDeck(publicURI, accessToken, clientIdentifier) {
+            $.ajax({
+                url: publicURI + '/library/onDeck',
+                type: 'get',
+                headers: {
+                    'X-Plex-Token': accessToken
+                },
+                dataType: 'xml',
+                success: ProcessOnDeck,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error('GetOnDeck Failed: ' + jqXHR);
+                }
+            });
+        }
+
+        function ProcessOnDeck(data) {
+            console.log("OnDeck: ", data);
+
+            var videos = $(data).find("Video");
+            videos.each(function () {
+                var type = $(this).attr('type');
+
+                if (type == 'episode') {
+                    var show = $(this).attr('grandparentTitle');
+                    var season = $(this).attr('parentTitle');
+                    var title = $(this).attr('title');
+                    console.log('Episode: ' + show + ' - ' + season + ' - ' + title);
+                } else if (type == 'movie') {
+                    var title = $(this).attr('title');
+                    console.log('Movie: ' + title);
+                } else {
+                    console.error('Unexpected video type:', type);
+                }
+
+                
+            });
+
+        }
+
+
+
+
+        function GetAuthToken() {
+            return localStorage.getItem('authToken');
+        }
+
+
+    </script>
+
+</body>
+
+</html>
