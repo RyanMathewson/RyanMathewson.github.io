@@ -1,9 +1,17 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
 
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
         crossorigin="anonymous">
+
+
+    <title>Flash Dashboard</title>
 
     <style>
 
@@ -17,24 +25,34 @@
 
 <body>
 
-    <div id='login'>
-        <h2>Plex Login</h2>
-        Username:
-        <input type="text" id="username" />
-        <br> Password:
-        <input type="password" id="password" />
-        <input type="button" value="Login" onclick="javascript:Login();" />
-        <div id='login_message' style='color: red;'></div>
-    </div>
+    <div class="container-fluid">
 
-    <div id="on_deck">
-        <h1>On Deck</h1>
-    </div>
+        <div class="row">
+            <div class="col-12" id='login'>
+                    <h2>Plex Login</h2>
+                Username:
+                <input type="text" id="username" />
+                <br> Password:
+                <input type="password" id="password" />
+                <input type="button" value="Login" onclick="javascript:Login();" />
+                <div id='login_message' style='color: red;'></div>
+            </div>
+        </div>
 
-    <div id="recently_added">
-            <h1>Recently Added</h1>
-    </div>
+        <div class="row" id="on_deck">
+            <div class="col-12">
+                    <h1>On Deck</h1>
+            </div>
+        </div>
 
+        <div class="row" id="recently_added">
+            <div class="col-12">
+                <h1>Recently Added</h1>
+            </div>
+        </div>
+
+
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
@@ -150,9 +168,14 @@
                 return;
             }
 
+
+            if (name != "Singularity") {
+                console.log("Not Our Server");
+                return;
+            }
+
             //console.log('Remote Connection: ', remoteConnection);
             var publicURI = remoteConnection.attr('uri');
-
             GetOnDeck(publicURI, accessToken);
             GetRecentlyAdded(publicURI, accessToken);
         }
@@ -179,12 +202,12 @@
                             var title = $(this).attr('title');
                             var grandparentThumb = $(this).attr('grandparentThumb');
                             console.log('Episode: ' + show + ' - ' + season + ' - ' + title);
-                            $("#on_deck").append($("<img class='thumbnail' src='" + publicURI + grandparentThumb + "?X-Plex-Token=" + accessToken + "'/>"));
+                            $("#on_deck").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + grandparentThumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else if (type == 'movie') {
                             var title = $(this).attr('title');
                             var thumb = $(this).attr('thumb');
                             console.log('Movie: ' + title);
-                            $("#on_deck").append($("<img class='thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/>"));
+                            $("#on_deck").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else {
                             console.error('Unexpected video type:', type);
                         }
@@ -213,29 +236,19 @@
                 dataType: 'xml',
                 success: function (data) {
 
-                    console.log("OnDeck: ", data);
+                    console.log("Recently Added: ", data);
 
                     var videos = $(data).find("Video");
                     videos.each(function () {
                         var type = $(this).attr('type');
-
-                        if (type == 'episode') {
-                            var show = $(this).attr('grandparentTitle');
-                            var season = $(this).attr('parentTitle');
-                            var title = $(this).attr('title');
-                            var grandparentThumb = $(this).attr('grandparentThumb');
-                            console.log('Episode: ' + show + ' - ' + season + ' - ' + title);
-                            $("#recently_added").append($("<img class='thumbnail' src='" + publicURI + grandparentThumb + "?X-Plex-Token=" + accessToken + "'/>"));
-                        } else if (type == 'movie') {
+                        if (type == 'movie') {
                             var title = $(this).attr('title');
                             var thumb = $(this).attr('thumb');
                             console.log('Movie: ' + title);
-                            $("#recently_added").append($("<img class='thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/>"));
+                            $("#recently_added").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else {
                             console.error('Unexpected video type:', type);
                         }
-
-
                     });
 
 
