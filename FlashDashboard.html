@@ -29,7 +29,7 @@
 
         <div class="row">
             <div class="col-12" id='login'>
-                    <h2>Plex Login</h2>
+                <h2>Plex Login</h2>
                 Username:
                 <input type="text" id="username" />
                 <br> Password:
@@ -41,7 +41,7 @@
 
         <div class="row" id="on_deck">
             <div class="col-12">
-                    <h1>On Deck</h1>
+                <h1>On Deck</h1>
             </div>
         </div>
 
@@ -50,6 +50,21 @@
                 <h1>Recently Added</h1>
             </div>
         </div>
+
+        <div class="row" id="search">
+            <div class="col-12">
+                <h1>Search</h1>
+                <input type="text" id="search_term" />
+                <input type="button" value="Search" onclick="javascript:Search();" id="search_button" />
+            </div>
+        </div>
+
+        <div class="row" id="search_result_shows">
+        </div>
+
+        <div class="row" id="search_result_movies">
+        </div>
+
 
 
     </div>
@@ -60,7 +75,17 @@
     <script>
 
 
+        var _devices = [];
+
+
         $(function () {
+
+            $('#search_term').keyup(function (event) {
+                if (event.keyCode === 13) {
+                    $("#search_button").click();
+                }
+            });
+
             attemptAutoLogin();
         });
 
@@ -176,6 +201,9 @@
 
             //console.log('Remote Connection: ', remoteConnection);
             var publicURI = remoteConnection.attr('uri');
+
+            _devices.push({ publicURI: publicURI, accessToken: accessToken });
+
             GetOnDeck(publicURI, accessToken);
             GetRecentlyAdded(publicURI, accessToken);
         }
@@ -238,6 +266,21 @@
 
                     console.log("Recently Added: ", data);
 
+                    var directories = $(data).find("Directory");
+                    directories.each(function(){
+                        var type = $(this).attr('type');
+                        if(type == 'season'){
+                            var title = $(this).attr('title');
+                            var thumb = $(this).attr('thumb');
+                            var parentThumb = $(this).attr('parentThumb');
+                            console.log('Season: ' + title);
+                            $("#recently_added").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                        }else{
+                            console.error("Unexpected directory type '" + type + "'");
+                        }
+                    });
+
+
                     var videos = $(data).find("Video");
                     videos.each(function () {
                         var type = $(this).attr('type');
@@ -257,6 +300,62 @@
                     console.error('GetRecentlyAdded Failed: ' + jqXHR);
                 }
             });
+        }
+
+
+
+        function Search() {
+            var searchTerm = $("#search_term").val();
+            console.log("Search for '" + searchTerm + "'");
+
+            $("#search_result_shows").empty();
+            $("#search_result_movies").empty();
+
+            $(_devices).each(function () {
+
+                var publicURI = this.publicURI;
+                var accessToken = this.accessToken;
+
+                $.ajax({
+                    url: publicURI + '/hubs/search',
+                    type: 'get',
+                    data: {
+                        "X-Plex-Token": accessToken,
+                        "includeCollections": 1,
+                        "sectionId": "",
+                        "query": searchTerm
+                    },
+                    success: function (data) {
+                        console.log("Search Results", data);
+
+                        var hubs = $(data).find("Hub");
+                        hubs.each(function () {
+                            var type = $(this).attr('type');
+
+                            if (type == "show") {
+                                var directories = $(this).find('Directory');
+                                directories.each(function () {
+                                    var thumb = $(this).attr('thumb');
+                                    $("#search_result_shows").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                });
+                            } else if (type == "movie") {
+                                var videos = $(this).find('Video');
+                                videos.each(function () {
+                                    var thumb = $(this).attr('thumb');
+                                    $("#search_result_movies").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                });
+                            }
+                        });
+
+                    },
+                    error: function (jqXHR) {
+                        console.error("Search Results", jqXHR);
+                    }
+                });
+
+
+            });
+
         }
 
 
