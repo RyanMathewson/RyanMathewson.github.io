@@ -15,13 +15,10 @@
 
 
 
-    <title>Sass Dashboard</title>
+    <title>Dashboard</title>
 
     <style>
 
-        .thumbnail{
-            width: 20%;
-        }
 
         #wombat {
             display: inline-block;
@@ -330,12 +327,12 @@
                             var title = $(this).attr('title');
                             var grandparentThumb = $(this).attr('grandparentThumb');
                             console.log('Episode: ' + show + ' - ' + season + ' - ' + title);
-                            $("#on_deck").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + grandparentThumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                            $("#on_deck").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + grandparentThumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else if (type == 'movie') {
                             var title = $(this).attr('title');
                             var thumb = $(this).attr('thumb');
                             console.log('Movie: ' + title);
-                            $("#on_deck").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                            $("#on_deck").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else {
                             console.error('Unexpected video type:', type);
                         }
@@ -378,7 +375,7 @@
                             var thumb = $(this).attr('thumb');
                             var parentThumb = $(this).attr('parentThumb');
                             console.log('Season: ' + title);
-                            $("#recently_added_tv").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                            $("#recently_added_tv").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else {
                             console.error("Unexpected directory type '" + type + "'");
                         }
@@ -392,7 +389,7 @@
                             var title = $(this).attr('title');
                             var thumb = $(this).attr('thumb');
                             console.log('Movie: ' + title);
-                            $("#recently_added_movies").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                            $("#recently_added_movies").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                         } else {
                             console.error('Unexpected video type:', type);
                         }
@@ -440,13 +437,13 @@
                                 var directories = $(this).find('Directory');
                                 directories.each(function () {
                                     var thumb = $(this).attr('thumb');
-                                    $("#search_result_shows").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                    $("#search_result_shows").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                                 });
                             } else if (type == "movie") {
                                 var videos = $(this).find('Video');
                                 videos.each(function () {
                                     var thumb = $(this).attr('thumb');
-                                    $("#search_result_movies").append($("<div class='col-2'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                    $("#search_result_movies").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                                 });
                             }
                         });
