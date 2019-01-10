@@ -5,7 +5,8 @@
 
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">.
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
         crossorigin="anonymous">
@@ -89,7 +90,7 @@
                 <img src="wombat.png" id="wombat">
             </div>
             <div class="col-4 text-center">
-                <h1>Sassboard</h1>
+                <h1>Dashboard</h1>
             </div>
             <div class="col-4">
                 <div class="float-right">
@@ -235,7 +236,7 @@
             $.ajax({
                 url: 'https://plex.tv/api/resources',
                 type: 'get',
-                headers: {
+                data: {
                     'includeHttps': 1,
                     'includeRelay': 1,
                     'X-Plex-Token': GetAuthToken()
@@ -274,9 +275,10 @@
             console.log(name, accessToken);
 
             var connections = $(this).find("Connection");
+            console.log("Connections: ", connections);
             var remoteConnection = null;
             connections.each(function () {
-                if ($(this).attr('local') == '0') {
+                if ($(this).attr('local') == '0' && $(this).attr('protocol') == "https") {
                     remoteConnection = $(this);
                     return false;
                 }
@@ -437,13 +439,13 @@
                                 var directories = $(this).find('Directory');
                                 directories.each(function () {
                                     var thumb = $(this).attr('thumb');
-                                    $("#search_result_shows").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                    $("#search_result_shows").append($("<div class='col-4'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                                 });
                             } else if (type == "movie") {
                                 var videos = $(this).find('Video');
                                 videos.each(function () {
                                     var thumb = $(this).attr('thumb');
-                                    $("#search_result_movies").append($("<div class='col-4 col-sm-3 col-md-2 col-lg-2 col-xl-1'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
+                                    $("#search_result_movies").append($("<div class='col-4'><img class='img-fluid img-thumbnail' src='" + publicURI + thumb + "?X-Plex-Token=" + accessToken + "'/></div>"));
                                 });
                             }
                         });
