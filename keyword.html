@@ -1,0 +1,285 @@
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Web Speech APIU</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+	
+#info a {
+  color: darkred;
+  text-decoration: underline;
+}
+
+.final {
+  color: black;
+  padding-right: 3px; 
+}
+.interim {
+  color: gray;
+}
+#results {
+  font-size: 14px;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  padding: 15px;
+  text-align: left;
+  min-height: 150px;
+  margin: 0 0 20px 0;
+}
+#start_button {
+  border: 0;
+  background-color:transparent;
+  padding: 0;
+  cursor: pointer;
+}
+#start_img {
+  width: 50px;
+  height: 50px;
+}
+
+.btn-primary {
+  width: 100px;
+  margin: auto;
+}
+
+select {
+  padding: 5px 5px;
+}
+
+@media screen and (max-width: 767px) {
+    #select_dialect {
+      position: absolute;
+      right: 0;
+    } 
+}
+
+@media screen and (min-width: 768px) {
+  select {
+    margin-right: 10px;
+  }
+}
+	
+	</style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  </head>
+  <body>
+      <main>
+          <div class="container mt-3">
+              <h3 class="text-center">Keyword Recorder Demo</h3>
+              <div id="info"></div>
+              <div class="float-right">
+                <button id="start_button">
+                  <img id="start_img" src="images/mic.gif" alt="Start"></button>
+              </div>
+              <div id="results">
+                <span id="final_span" class="final"></span>
+                <span id="interim_span" class="interim"></span>
+                <p>
+              </div>
+              <div class="row col-12 p-0 m-0">
+				<audio controls src="https://20263.live.streamtheworld.com/WDVDFMAAC.aac"/>
+              </div>
+			  
+			  <div class="row col-12 p-0 m-0">
+				<div id="downloads">
+				</div>
+			  </div>
+			  
+			  
+<script>
+  let recordedChunks = [];
+  let mediaRecorder = null;
+  const downloads = document.getElementById('downloads');
+
+  const handleSuccess = function(stream) {
+	console.log('Constructing Media Recorder');
+  
+    const options = {mimeType: 'audio/webm'}; // audio/webm;codecs=opus
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    mediaRecorder.addEventListener('dataavailable', function(e) {
+      if (e.data.size > 0) {
+		console.log('Media Recorder Data Available');
+        recordedChunks.push(e.data);
+      }
+    });
+
+    mediaRecorder.addEventListener('stop', function() {
+		console.log('Media Recorder Stopped');
+		
+		// Only save off the recording if it contains a keyword
+		if(keywordFound){
+			console.log('Keyword found, saving recording');
+			keywordFound = false;
+			var aTag = document.createElement('a');
+			var now = new Date();
+			aTag.innerText = now.toLocaleTimeString();
+			aTag.href = URL.createObjectURL(new Blob(recordedChunks));
+			aTag.download = now.toLocaleTimeString() + '.wav';
+			downloads.appendChild(aTag);
+		}
+		
+		// Restart
+		console.log('Restarting Recorder');
+		recordedChunks = [];
+		mediaRecorder.start();
+    });
+
+	
+  };
+
+
+	navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
+	
+	
+	
+var final_transcript = '';
+var recognizing = false;
+var ignore_onend;
+var start_timestamp;
+var recognition;
+var keywordFound = false;
+
+$( document ).ready(function() {
+  
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = function() {
+		console.log('Speech Recognition Started');
+		recognizing = true;
+		if(mediaRecorder != null){
+			mediaRecorder.start();
+		}
+    };
+
+    recognition.onerror = function(event) {
+		console.log('Speech Recognition Error');
+		console.log(event);
+      if (event.error == 'no-speech') {
+        ignore_onend = true;
+		console.log("No Speech Detected. Stopping Recording");
+		mediaRecorder.stop();
+      }
+      if (event.error == 'audio-capture') {
+        ignore_onend = true;
+		console.log("Audio Capture Error. Stopping Recording");
+		mediaRecorder.stop();
+      }
+      if (event.error == 'not-allowed') {
+        if (event.timeStamp - start_timestamp < 100) {
+          showInfo('blocked');
+        } else {
+          showInfo('denied');
+        }
+        ignore_onend = true;
+      }
+    };
+
+    recognition.onend = function() {
+	  console.log('Speech Recognition Ended');
+      recognizing = false;
+	  recognition.start();
+      if (ignore_onend) {
+        return;
+      }
+      if (!final_transcript) {
+        return;
+      }
+    };
+
+    recognition.onresult = function(event) {
+      var interim_transcript = '';
+      for (var i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+			console.log('Final Transcription Received');
+          final_transcript += event.results[i][0].transcript;
+		  if(event.results[i][0].transcript.toLowerCase().includes('moon')){
+			if(keywordFound === false){
+				console.log('Key Word Found. Flagging Recording For Saving');
+			}else{
+				console.log('No keywords found. Discarding recording.');
+			}
+			keywordFound = true;
+		  }
+		  mediaRecorder.stop();
+        } else {
+          interim_transcript += event.results[i][0].transcript;
+		}
+      }
+      final_transcript = capitalize(final_transcript);
+      final_span.innerHTML = linebreak(final_transcript);
+      interim_span.innerHTML = linebreak(interim_transcript);
+    };
+	
+	
+	
+	recognition.start();
+  ignore_onend = false;
+  final_span.innerHTML = '';
+  interim_span.innerHTML = '';
+  start_timestamp = new Date();
+  
+});
+
+
+
+
+var two_line = /\n\n/g;
+var one_line = /\n/g;
+function linebreak(s) {
+  return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
+}
+
+var first_char = /\S/;
+function capitalize(s) {
+  return s.replace(first_char, function(m) { return m.toUpperCase(); });
+}
+
+
+
+$("#start_button").click(function () {
+	console.log('Start Clicked');
+  if (recognizing) {
+    recognition.stop();
+    return;
+  }
+  final_transcript = '';
+  //recognition.lang = select_dialect.value;
+  recognition.start();
+  ignore_onend = false;
+  final_span.innerHTML = '';
+  interim_span.innerHTML = '';
+  start_timestamp = event.timeStamp;
+});
+
+$("#select_language").change(function () {
+  updateCountry();
+});
+
+function showInfo(s) {
+  if (s) {
+    var message = messages[s];
+    $("#info").html(message.msg);
+    $("#info").removeClass();
+    $("#info").addClass('alert');
+    $("#info").addClass(message.class);
+  } else {
+    $("#info").removeClass();
+    $("#info").addClass('d-none');
+  }
+}
+
+
+
+</script>
+
+          </div>
+      </main>
+
+  </body>
+</html>
+
