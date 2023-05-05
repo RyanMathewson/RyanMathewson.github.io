@@ -106,7 +106,9 @@
         }
 
         async function OpenMarketWindow(accessToken, itemTypeID) {
-            await fetch('https://esi.evetech.net/latest/ui/openwindow/marketdetails/?datasource=tranquility&token=' + accessToken + '&type_id=' + itemTypeID);
+            await fetch('https://esi.evetech.net/latest/ui/openwindow/marketdetails/?datasource=tranquility&token=' + accessToken + '&type_id=' + itemTypeID, {
+                method: 'POST'
+            });
         }
 
         function getCookie(cookieName) {
@@ -124,7 +126,7 @@
             //window.location.href = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + encodeURIComponent(clientID) + "&scope=" + encodeURIComponent(scopes) + "&state=<unique-string>";
 
 
-                
+
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const code = urlParams.get('code');
@@ -132,7 +134,7 @@
 
 
 
-            
+
 
             if (code != null && codeVerifier != null) {
                 await FinishAuthFlow(code, codeVerifier);
@@ -147,7 +149,7 @@
             }
 
             const itemTypeID = urlParams.get('itemTypeID');
-            if(itemTypeID != null){
+            if (itemTypeID != null) {
                 OpenMarketWindow(accessToken, itemTypeID);
             }
 
