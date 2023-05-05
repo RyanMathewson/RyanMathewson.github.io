@@ -101,6 +101,12 @@
             });
         }
 
+        async function NavigateToWaypoint(accessToken, destination_id, add_to_begining, clear_other_waypoints){
+            await fetch('https://esi.evetech.net/latest/ui/autopilot/waypoint/?datasource=tranquility&token=' + accessToken + '&destination_id=' + destination_id + '&add_to_beginning=' + add_to_begining + "&clear_other_waypoints=" + clear_other_waypoints, {
+                method: 'POST'
+            });
+        }
+
         function getCookie(cookieName) {
             let cookie = {};
             document.cookie.split(';').forEach(function (el) {
@@ -116,19 +122,10 @@
 
 
         async function Main() {
-
-            //window.location.href = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + encodeURIComponent(clientID) + "&scope=" + encodeURIComponent(scopes) + "&state=<unique-string>";
-
-
-
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const code = urlParams.get('code');
             const stateJSON = urlParams.get('state');
-
-
-
-
 
             if (code != null && stateJSON != null) {
                 await FinishAuthFlow(code, stateJSON);
@@ -142,9 +139,16 @@
                 return;
             }
 
-            const itemTypeID = urlParams.get('itemTypeID');
-            if (itemTypeID != null) {
-                OpenMarketWindow(accessToken, itemTypeID);
+            const marketItemID = urlParams.get('marketItemID');
+            if (marketItemID != null) {
+                OpenMarketWindow(accessToken, marketItemID);
+            }
+
+            const destination_id = urlParams.get('destination_id');
+            const add_to_begining = urlParams.get('add_to_begining');
+            const clear_other_waypoints = urlParams.get('clear_other_waypoints');
+            if(destination_id != null && add_to_begining != null && clear_other_waypoints != null){
+                NavigateToWaypoint(accessToken, destination_id, add_to_begining, clear_other_waypoints);
             }
 
 
