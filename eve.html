@@ -5,7 +5,7 @@
 </head>
 
 <body>
-    Hello World
+    
     <script>
 
         const clientID = '91a7412560544d04bf83845207a9c56a';
@@ -85,7 +85,7 @@
             const expiresIn = jsonData.expires_in;
             console.log(expiresIn);
 
-            document.cookie = "refresh_token=" + refreshToken;
+            document.cookie = "refresh_token=" + refreshToken + "; max-age=1200";
         }
 
         function urlsafe_b64encode(bytes) {
@@ -116,11 +116,15 @@
             const code = urlParams.get('code');
             const codeVerifier = urlParams.get('state');
 
-            if (code != null && codeVerifier != null) {
-                await FinishAuthFlow(code, codeVerifier);
-            } else {
+            if(document.cookie == null){
                 await StartAuthFlow();
             }
+
+            if (code != null && codeVerifier != null) {
+                await FinishAuthFlow(code, codeVerifier);
+            }
+
+            
         }
 
         Main();
