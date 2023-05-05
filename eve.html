@@ -78,6 +78,14 @@
 
             const jsonData = response.json();
             console.log(jsonData);
+
+            const refreshToken = jsonData.refresh_token;
+            console.log(refreshToken);
+
+            const expiresIn = jsonData.expires_in;
+            console.log(expiresIn);
+
+            document.cookie = "refresh_token=" + refreshToken;
         }
 
         function urlsafe_b64encode(bytes) {
