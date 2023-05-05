@@ -6,45 +6,37 @@
 
 <body>
 
+
     <script>
 
         const clientID = '91a7412560544d04bf83845207a9c56a';
         const callbackURI = 'https://ryanmathewson.github.io/eve.html';
         const scopes = 'esi-ui.open_window.v1 esi-ui.write_waypoint.v1';
 
-
-
-
-
         async function StartAuthFlow() {
-
-
-
 
             const tokenBytes = new Uint32Array(32);
             self.crypto.getRandomValues(tokenBytes);
-            //const tokenBytes = new Uint32Array([93, 52, 124, 56, 157, 71, 243, 41, 82, 205, 80, 89, 125, 21, 83, 212, 177, 159, 175, 146, 191, 10, 140, 223, 253, 241, 44, 170, 146, 10, 156, 210]);
-
-            console.log("Token Bytes: ", tokenBytes);
-
             var code_verifier = urlsafe_b64encode(tokenBytes);
-            console.log("Code Verifier: ", code_verifier);
-
             var hash = await sha256(code_verifier);
-            console.log("Hash: ", hash);
-
             var code_challenge = urlsafe_b64encode(hash);
-            console.log("Code Challenge: ", code_challenge);
 
-            var authorizationURL = "https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + clientID + "&scope=" + encodeURIComponent(scopes) + "&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + encodeURIComponent(code_verifier);
-            console.log("Authorization URL", authorizationURL);
+            var state = {
+                code_verifier: code_verifier,
+                queryString: window.location.search
+            };
+
+            var authorizationURL = "https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + clientID + "&scope=" + encodeURIComponent(scopes) + "&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=" + encodeURIComponent(JSON.stringify(state));
 
             window.location.href = authorizationURL;
         }
 
-        async function FinishAuthFlow(code, codeVerifier) {
+        async function FinishAuthFlow(code, stateJSON) {
 
-            console.log("Finish Auth Code: ", code);
+
+            var state = JSON.parse(stateJSON);
+
+            codeVerifier = state.code_verifier;
 
             var details = {
                 'grant_type': 'authorization_code',
@@ -77,15 +69,13 @@
             }
 
             const jsonData = await response.json();
-            console.log(jsonData);
-
             const accessToken = jsonData.access_token;
-            console.log(accessToken);
-
-            const expiresIn = jsonData.expires_in;
-            console.log(expiresIn);
 
             document.cookie = "access_token=" + accessToken + "; max-age=1200; secure";
+
+
+            document.location.href = document.location.href.replace(document.location.search, state.queryString);
+
         }
 
         function urlsafe_b64encode(bytes) {
@@ -120,6 +110,10 @@
             return cookie[cookieName];
         }
 
+        function clearCookie(){
+            document.cookie.split(";").forEach(function(c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+        }
+
 
         async function Main() {
 
@@ -130,14 +124,14 @@
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const code = urlParams.get('code');
-            const codeVerifier = urlParams.get('state');
+            const stateJSON = urlParams.get('state');
 
 
 
 
 
-            if (code != null && codeVerifier != null) {
-                await FinishAuthFlow(code, codeVerifier);
+            if (code != null && stateJSON != null) {
+                await FinishAuthFlow(code, stateJSON);
                 return;
             }
 
