@@ -5,7 +5,7 @@
 </head>
 
 <body>
-    
+
     <script>
 
         const clientID = '91a7412560544d04bf83845207a9c56a';
@@ -70,22 +70,22 @@
             });
 
             console.log(response);
-            if(!response.ok){
+            if (!response.ok) {
                 var reason = await response.text();
                 console.log("Auth Failed: " + reason);
                 return;
-            }            
+            }
 
             const jsonData = await response.json();
             console.log(jsonData);
 
-            const refreshToken = jsonData.refresh_token;
-            console.log(refreshToken);
+            const accessToken = jsonData.access_token;
+            console.log(accessToken);
 
             const expiresIn = jsonData.expires_in;
             console.log(expiresIn);
 
-            document.cookie = "refresh_token=" + refreshToken + "; max-age=1200";
+            document.cookie = "access_token=" + accessToken + "; max-age=1200; secure";
         }
 
         function urlsafe_b64encode(bytes) {
@@ -105,6 +105,19 @@
             return Array.from(new Uint8Array(hashBuffer));
         }
 
+        async function OpenMarketWindow(accessToken, itemTypeID) {
+            await fetch('https://esi.evetech.net/latest/ui/openwindow/marketdetails/?datasource=tranquility&token=' + accessToken + '&type_id=' + itemTypeID);
+        }
+
+        function getCookie(cookieName) {
+            let cookie = {};
+            document.cookie.split(';').forEach(function (el) {
+                let [key, value] = el.split('=');
+                cookie[key.trim()] = value;
+            })
+            return cookie[cookieName];
+        }
+
 
         async function Main() {
 
@@ -116,15 +129,24 @@
             const code = urlParams.get('code');
             const codeVerifier = urlParams.get('state');
 
-            if(document.cookie == null){
+            if (document.cookie == null) {
                 await StartAuthFlow();
             }
+
+            
 
             if (code != null && codeVerifier != null) {
                 await FinishAuthFlow(code, codeVerifier);
             }
 
-            
+            const accessToken = getCookie('access_token');
+
+            const itemTypeID = urlParams.get('itemTypeID');
+            if(itemTypeID != null){
+                OpenMarketWindow(accessToken, itemTypeID);
+            }
+
+
         }
 
         Main();
