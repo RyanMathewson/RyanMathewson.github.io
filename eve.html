@@ -1,0 +1,84 @@
+<html>
+    <head>
+        
+    </head>
+    <body>
+        Hello World
+        <script>
+
+
+
+
+
+
+
+            async function StartAuthFlow(){
+
+
+                var clientID = '91a7412560544d04bf83845207a9c56a';
+                var callbackURI = 'https://ryanmathewson.github.io/eve.html';
+                var scopes = 'esi-ui.open_window.v1 esi-ui.write_waypoint.v1';
+
+                const tokenBytes = new Uint32Array(32);
+                self.crypto.getRandomValues(tokenBytes);
+                //const tokenBytes = new Uint32Array([93, 52, 124, 56, 157, 71, 243, 41, 82, 205, 80, 89, 125, 21, 83, 212, 177, 159, 175, 146, 191, 10, 140, 223, 253, 241, 44, 170, 146, 10, 156, 210]);
+                
+                console.log("Token Bytes: ", tokenBytes);
+
+                var code_verifier = urlsafe_b64encode(tokenBytes);
+                console.log("Code Verifier: ", code_verifier);
+
+                var hash = await sha256(code_verifier);
+                console.log("Hash: ", hash);
+
+                var code_challenge = urlsafe_b64encode(hash);
+                console.log("Code Challenge: ", code_challenge);
+
+
+                var authorizationURL = "https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + clientID + "&scope=" + encodeURIComponent(scopes) + "&code_challenge=" + code_challenge + "&code_challenge_method=S256&state=not_used";
+                console.log("Authorization URL",authorizationURL);
+
+                window.location.href = authorizationURL;
+            }
+
+            function FinishAuthFlow(code){
+
+                console.log("Finish Auth Code: ", code);
+            }
+
+            function urlsafe_b64encode(bytes){
+                // Convert from bytes to base64 and apply replacements to mimic the python functions
+                return btoa(String.fromCharCode.apply(null, new Uint8Array(bytes))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','')
+            }
+
+            async function sha256(message) {
+                // encode as UTF-8
+                const msgBuffer = new TextEncoder().encode(message);             
+                console.log(msgBuffer);
+
+                // hash the message
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                console.log(hashBuffer);
+
+                return Array.from(new Uint8Array(hashBuffer));
+            }
+
+
+            async function Main(){
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const code = urlParams.get('code');
+
+            if(code != null){
+                await FinishAuthFlow(code);
+            }else{
+                StartAuthFlow();
+            }
+        }
+
+        Main();
+
+            
+        </script>
+    </body>
+</html>
