@@ -71,12 +71,12 @@
 
             console.log(response);
             if(!response.ok){
-                console.log("Auth Failed");
+                var reason = await response.text();
+                console.log("Auth Failed: " + reason);
                 return;
-            }
-            
+            }            
 
-            const jsonData = response.json();
+            const jsonData = await response.json();
             console.log(jsonData);
 
             const refreshToken = jsonData.refresh_token;
@@ -117,9 +117,9 @@
             const codeVerifier = urlParams.get('state');
 
             if (code != null && codeVerifier != null) {
-                FinishAuthFlow(code, codeVerifier);
+                await FinishAuthFlow(code, codeVerifier);
             } else {
-                StartAuthFlow();
+                await StartAuthFlow();
             }
         }
 
