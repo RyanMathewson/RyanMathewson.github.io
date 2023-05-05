@@ -124,22 +124,27 @@
             //window.location.href = "https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=" + encodeURIComponent(callbackURI) + "&client_id=" + encodeURIComponent(clientID) + "&scope=" + encodeURIComponent(scopes) + "&state=<unique-string>";
 
 
+                
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const code = urlParams.get('code');
             const codeVerifier = urlParams.get('state');
 
-            if (document.cookie == null) {
-                await StartAuthFlow();
-            }
+
 
             
 
             if (code != null && codeVerifier != null) {
                 await FinishAuthFlow(code, codeVerifier);
+                return;
             }
 
             const accessToken = getCookie('access_token');
+
+            if (accessToken == null) {
+                await StartAuthFlow();
+                return;
+            }
 
             const itemTypeID = urlParams.get('itemTypeID');
             if(itemTypeID != null){
